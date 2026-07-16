@@ -38,14 +38,6 @@ jobs:
           echo "Logging into Railway"
           railway login --apiKey "$RAILWAY_TOKEN"
 
-      - name: (Optional) Link to existing Railway project
-        if: ${{ secrets.RAILWAY_PROJECT_ID != '' }}
-        env:
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-        run: |
-          echo "Linking to Railway project"
-          railway link --project "$RAILWAY_PROJECT_ID" || true
-
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
