@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Greeting API Demo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 20px;
+        line-height: 1.5;
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      }
+      input, button {
+        padding: 10px;
+        margin-top: 8px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      button {
+        cursor: pointer;
+        background: #111;
+        color: white;
+        border: none;
+        border-radius: 6px;
+      }
+      #result {
+        margin-top: 20px;
+        padding: 12px;
+        background: #f8f8f8;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Greeting API Demo</h2>
+      <p>Use this page to test your live backend from the browser.</p>
+
+      <label>API base URL</label>
+      <input id="apiUrl" value="http://127.0.0.1:8000" />
+
+      <label>City</label>
+      <input id="city" value="London" />
+
+      <label>Country</label>
+      <input id="country" value="UK" />
+
+      <button onclick="loadGreeting()">Load greeting</button>
+
+      <div id="result">Loading...</div>
+    </div>
+
+    <script>
+      async function loadGreeting() {
+        const apiUrl = document.getElementById('apiUrl').value.replace(/\/$/, '');
+        const city = document.getElementById('city').value;
+        const country = document.getElementById('country').value;
+        const resultBox = document.getElementById('result');
+
+        resultBox.textContent = 'Loading...';
+
+        try {
+          const response = await fetch(`${apiUrl}/api/greeting`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+              city,
+              country,
+              visit_count: 1,
+              is_returning: false,
+              language: navigator.language || 'en-US'
+            })
+          });
+
+          const data = await response.json();
+          resultBox.innerHTML = `
+            <strong>Greeting:</strong> ${data.greeting}<br>
+            <strong>Live status:</strong> ${data.live_status || 'n/a'}<br>
+            <strong>Cached:</strong> ${data.cached}
+          `;
+        } catch (error) {
+          resultBox.textContent = `Request failed: ${error.message}`;
+        }
+      }
+
+      window.addEventListener('load', loadGreeting);
+    </script>
+  </body>
+</html>
