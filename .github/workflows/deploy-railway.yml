@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -29,11 +29,14 @@ jobs:
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           # GitHub forbids secret names that start with 'GITHUB_'. Use DEV_GITHUB_USERNAME instead.
           DEV_GITHUB_USERNAME: ${{ secrets.DEV_GITHUB_USERNAME }}
           ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
         run: |
+          set -euo pipefail
           if [ -z "$RAILWAY_TOKEN" ]; then
             echo "RAILWAY_TOKEN secret is missing or empty. Add a valid Railway token to GitHub secrets before deploying."
             exit 1
@@ -41,5 +44,15 @@ jobs:
           if [ -n "$DEV_GITHUB_USERNAME" ]; then
             export GITHUB_USERNAME="$DEV_GITHUB_USERNAME"
           fi
-          railway whoami
-          railway up --ci --detach --yes
+
+          SERVICE_ARGS=()
+          if [ -n "$RAILWAY_SERVICE_ID" ]; then
+            SERVICE_ARGS+=(--service "$RAILWAY_SERVICE_ID")
+          fi
+
+          if ! railway whoami; then
+            echo "Railway authentication failed. Verify that RAILWAY_TOKEN is a valid project or account token for the target Railway project."
+            exit 1
+          fi
+
+          railway up --ci --detach --yes "${SERVICE_ARGS[@]}"
