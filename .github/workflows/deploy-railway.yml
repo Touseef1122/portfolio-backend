@@ -13,15 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
-
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python3 --version
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
@@ -29,6 +25,7 @@ jobs:
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -37,10 +34,15 @@ jobs:
           ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
         run: |
           set -euo pipefail
-          if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "RAILWAY_TOKEN secret is missing or empty. Add a valid Railway token to GitHub secrets before deploying."
+          if [ -n "$RAILWAY_TOKEN" ]; then
+            export RAILWAY_TOKEN="$RAILWAY_TOKEN"
+          elif [ -n "$RAILWAY_API_TOKEN" ]; then
+            export RAILWAY_TOKEN="$RAILWAY_API_TOKEN"
+          else
+            echo "No Railway token was provided. Add RAILWAY_TOKEN or RAILWAY_API_TOKEN to GitHub Secrets."
             exit 1
           fi
+
           if [ -n "$DEV_GITHUB_USERNAME" ]; then
             export GITHUB_USERNAME="$DEV_GITHUB_USERNAME"
           fi
@@ -51,7 +53,7 @@ jobs:
           fi
 
           if ! railway whoami; then
-            echo "Railway authentication failed. Verify that RAILWAY_TOKEN is a valid project or account token for the target Railway project."
+            echo "Railway authentication failed. Verify the token in GitHub Secrets is valid and belongs to the target Railway project or workspace."
             exit 1
           fi
 
