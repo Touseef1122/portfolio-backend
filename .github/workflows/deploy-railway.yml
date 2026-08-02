@@ -22,56 +22,16 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-          RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
-          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BACKEND }}
-          # GitHub forbids secret names that start with 'GITHUB_'. Use DEV_GITHUB_USERNAME instead.
-          DEV_GITHUB_USERNAME: ${{ secrets.DEV_GITHUB_USERNAME }}
-          ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+      - name: Test Railway Login
         run: |
           set -euo pipefail
+          railway whoami
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
 
-          TOKEN_SOURCE=""
-          if [ -n "${RAILWAY_API_TOKEN:-}" ]; then
-            export RAILWAY_API_TOKEN="$(printf '%s' "$RAILWAY_API_TOKEN" | tr -d '\r\n' | xargs)"
-            unset RAILWAY_TOKEN
-            TOKEN_SOURCE="RAILWAY_API_TOKEN"
-          elif [ -n "${RAILWAY_TOKEN:-}" ]; then
-            export RAILWAY_TOKEN="$(printf '%s' "$RAILWAY_TOKEN" | tr -d '\r\n' | xargs)"
-            unset RAILWAY_API_TOKEN
-            TOKEN_SOURCE="RAILWAY_TOKEN"
-          else
-            echo "No Railway token was provided. Add your Railway account/workspace token to GitHub Secrets as RAILWAY_API_TOKEN, or project token as RAILWAY_TOKEN."
-            exit 1
-          fi
-
-          echo "Using Railway token from GitHub secret: $TOKEN_SOURCE"
-
-          echo "Railway auth check:"
-          railway whoami 2>&1 || true
-
-          if [ -n "$DEV_GITHUB_USERNAME" ]; then
-            export GITHUB_USERNAME="$DEV_GITHUB_USERNAME"
-          fi
-
-          SERVICE_ARGS=()
-          if [ -n "$RAILWAY_SERVICE_ID" ]; then
-            SERVICE_ARGS+=(--service "$RAILWAY_SERVICE_ID")
-          elif [ -n "$RAILWAY_SERVICE" ]; then
-            SERVICE_ARGS+=(--service "$RAILWAY_SERVICE")
-          fi
-
-          if [ -n "$RAILWAY_PROJECT_ID" ]; then
-            export RAILWAY_PROJECT_ID="$RAILWAY_PROJECT_ID"
-          fi
-
-          if ! railway up --ci --detach --yes "${SERVICE_ARGS[@]}"; then
-            echo "Railway authentication or deployment failed. Verify the project token in GitHub Secrets is valid and has access to the target project."
-            exit 1
-          fi
+      - name: Deploy to Railway
+        run: |
+          set -euo pipefail
+          railway up
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
