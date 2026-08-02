@@ -27,11 +27,14 @@ jobs:
           set -euo pipefail
           railway whoami
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
         run: |
           set -euo pipefail
-          railway up
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+
+          railway up --ci --detach --yes
