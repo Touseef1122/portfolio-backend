@@ -24,9 +24,8 @@ jobs:
 
       - name: Deploy to Railway
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
-          RAILWAY_LEGACY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
           RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
@@ -37,14 +36,9 @@ jobs:
           ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
         run: |
           set -euo pipefail
-          if [ -n "${RAILWAY_TOKEN:-}" ]; then
-            export RAILWAY_TOKEN="$RAILWAY_TOKEN"
-          elif [ -n "${RAILWAY_API_TOKEN:-}" ]; then
-            export RAILWAY_TOKEN="$RAILWAY_API_TOKEN"
-          elif [ -n "${RAILWAY_LEGACY_TOKEN:-}" ]; then
-            export RAILWAY_TOKEN="$RAILWAY_LEGACY_TOKEN"
-          else
-            echo "No Railway token was provided. Add RAILWAY_API_TOKEN or RAILWAY_TOKEN to GitHub Secrets."
+
+          if [ -z "${RAILWAY_TOKEN:-}" ]; then
+            echo "RAILWAY_TOKEN is empty. Create a Railway project token for this project and store it in GitHub Secrets as RAILWAY_TOKEN."
             exit 1
           fi
 
@@ -61,7 +55,11 @@ jobs:
             SERVICE_ARGS+=(--service "$RAILWAY_SERVICE")
           fi
 
+          if [ -n "$RAILWAY_PROJECT_ID" ]; then
+            export RAILWAY_PROJECT_ID="$RAILWAY_PROJECT_ID"
+          fi
+
           if ! railway up --ci --detach --yes "${SERVICE_ARGS[@]}"; then
-            echo "Railway authentication or deployment failed. Verify the token in GitHub Secrets is valid and has access to the target project or workspace."
+            echo "Railway authentication or deployment failed. Verify the project token in GitHub Secrets is valid and has access to the target project."
             exit 1
           fi
