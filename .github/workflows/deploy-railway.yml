@@ -24,8 +24,9 @@ jobs:
 
       - name: Deploy to Railway
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
           RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+          RAILWAY_LEGACY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
           RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
@@ -36,12 +37,14 @@ jobs:
           ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
         run: |
           set -euo pipefail
-          if [ -n "$RAILWAY_TOKEN" ]; then
+          if [ -n "${RAILWAY_TOKEN:-}" ]; then
             export RAILWAY_TOKEN="$RAILWAY_TOKEN"
-          elif [ -n "$RAILWAY_API_TOKEN" ]; then
+          elif [ -n "${RAILWAY_API_TOKEN:-}" ]; then
             export RAILWAY_TOKEN="$RAILWAY_API_TOKEN"
+          elif [ -n "${RAILWAY_LEGACY_TOKEN:-}" ]; then
+            export RAILWAY_TOKEN="$RAILWAY_LEGACY_TOKEN"
           else
-            echo "No Railway token was provided. Add RAILWAY_TOKEN or RAILWAY_API_TOKEN to GitHub Secrets."
+            echo "No Railway token was provided. Add RAILWAY_API_TOKEN or RAILWAY_TOKEN to GitHub Secrets."
             exit 1
           fi
 
