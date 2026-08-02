@@ -39,12 +39,12 @@ jobs:
 
           TOKEN_SOURCE=""
           if [ -n "${RAILWAY_API_TOKEN:-}" ]; then
-            RAILWAY_TOKEN="$(printf '%s' "$RAILWAY_API_TOKEN" | tr -d '\r\n' | xargs)"
-            export RAILWAY_API_TOKEN="$RAILWAY_TOKEN"
-            export RAILWAY_TOKEN
+            export RAILWAY_API_TOKEN="$(printf '%s' "$RAILWAY_API_TOKEN" | tr -d '\r\n' | xargs)"
+            unset RAILWAY_TOKEN
             TOKEN_SOURCE="RAILWAY_API_TOKEN"
           elif [ -n "${RAILWAY_TOKEN:-}" ]; then
             export RAILWAY_TOKEN="$(printf '%s' "$RAILWAY_TOKEN" | tr -d '\r\n' | xargs)"
+            unset RAILWAY_API_TOKEN
             TOKEN_SOURCE="RAILWAY_TOKEN"
           else
             echo "No Railway token was provided. Add your Railway account/workspace token to GitHub Secrets as RAILWAY_API_TOKEN, or project token as RAILWAY_TOKEN."
@@ -52,6 +52,9 @@ jobs:
           fi
 
           echo "Using Railway token from GitHub secret: $TOKEN_SOURCE"
+
+          echo "Railway auth check:"
+          railway whoami 2>&1 || true
 
           if [ -n "$DEV_GITHUB_USERNAME" ]; then
             export GITHUB_USERNAME="$DEV_GITHUB_USERNAME"
