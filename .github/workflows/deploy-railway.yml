@@ -28,6 +28,8 @@ jobs:
           RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+          RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
+          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BACKEND }}
           # GitHub forbids secret names that start with 'GITHUB_'. Use DEV_GITHUB_USERNAME instead.
           DEV_GITHUB_USERNAME: ${{ secrets.DEV_GITHUB_USERNAME }}
@@ -50,6 +52,8 @@ jobs:
           SERVICE_ARGS=()
           if [ -n "$RAILWAY_SERVICE_ID" ]; then
             SERVICE_ARGS+=(--service "$RAILWAY_SERVICE_ID")
+          elif [ -n "$RAILWAY_SERVICE" ]; then
+            SERVICE_ARGS+=(--service "$RAILWAY_SERVICE")
           fi
 
           if ! railway whoami; then
