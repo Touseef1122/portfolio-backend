@@ -37,12 +37,19 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ -z "${RAILWAY_TOKEN:-}" ]; then
-            echo "RAILWAY_TOKEN is empty. Create a Railway project token for this project and store it in GitHub Secrets as RAILWAY_TOKEN."
+          TOKEN_SOURCE=""
+          if [ -n "${RAILWAY_TOKEN:-}" ]; then
+            export RAILWAY_TOKEN="$(printf '%s' "$RAILWAY_TOKEN" | tr -d '\r\n' | xargs)"
+            TOKEN_SOURCE="RAILWAY_TOKEN"
+          elif [ -n "${RAILWAY_API_TOKEN:-}" ]; then
+            export RAILWAY_TOKEN="$(printf '%s' "$RAILWAY_API_TOKEN" | tr -d '\r\n' | xargs)"
+            TOKEN_SOURCE="RAILWAY_API_TOKEN"
+          else
+            echo "No Railway token was provided. Add a Railway project token to GitHub Secrets as RAILWAY_TOKEN or RAILWAY_API_TOKEN."
             exit 1
           fi
 
-          export RAILWAY_TOKEN="$(printf '%s' "$RAILWAY_TOKEN" | tr -d '\r\n' | xargs)"
+          echo "Using Railway token from GitHub secret: $TOKEN_SOURCE"
 
           if [ -n "$DEV_GITHUB_USERNAME" ]; then
             export GITHUB_USERNAME="$DEV_GITHUB_USERNAME"
