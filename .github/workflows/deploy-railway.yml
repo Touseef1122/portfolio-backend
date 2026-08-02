@@ -9,32 +9,59 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Install dependencies
         run: |
-          python3 --version
-          python3 -m pip install --upgrade pip
-          python3 -m pip install -r requirements.txt
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Test Railway Login
-        run: |
-          set -euo pipefail
-          railway whoami
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
         run: |
           set -euo pipefail
 
-          railway up --ci --detach --yes
+          RAILWAY_TOKEN="$(echo -n "${RAILWAY_TOKEN:-}" | xargs)"
+          RAILWAY_API_TOKEN="$(echo -n "${RAILWAY_API_TOKEN:-}" | xargs)"
+          RAILWAY_PROJECT_ID="$(echo -n "${RAILWAY_PROJECT_ID:-}" | xargs)"
+          RAILWAY_SERVICE_ID="$(echo -n "${RAILWAY_SERVICE_ID:-}" | xargs)"
+
+          if [ -z "$RAILWAY_TOKEN" ] && [ -n "$RAILWAY_API_TOKEN" ]; then
+            RAILWAY_TOKEN="$RAILWAY_API_TOKEN"
+            echo "Using RAILWAY_API_TOKEN as RAILWAY_TOKEN"
+          fi
+
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "No Railway token found. Add RAILWAY_TOKEN or RAILWAY_API_TOKEN to GitHub Secrets."
+            exit 1
+          fi
+
+          if [ -z "$RAILWAY_PROJECT_ID" ]; then
+            echo "RAILWAY_PROJECT_ID is missing. Add it to GitHub Secrets."
+            exit 1
+          fi
+
+          if [ -z "$RAILWAY_SERVICE_ID" ]; then
+            echo "RAILWAY_SERVICE_ID is missing. Add it to GitHub Secrets."
+            exit 1
+          fi
+
+          echo "Railway login check:"
+          railway whoami
+
+          railway up --ci --detach --yes --project "$RAILWAY_PROJECT_ID" --service "$RAILWAY_SERVICE_ID"
