@@ -48,6 +48,8 @@ jobs:
             exit 1
           fi
 
+          export RAILWAY_TOKEN="$(printf '%s' "$RAILWAY_TOKEN" | tr -d '\r\n' | xargs)"
+
           if [ -n "$DEV_GITHUB_USERNAME" ]; then
             export GITHUB_USERNAME="$DEV_GITHUB_USERNAME"
           fi
@@ -59,9 +61,7 @@ jobs:
             SERVICE_ARGS+=(--service "$RAILWAY_SERVICE")
           fi
 
-          if ! railway whoami; then
-            echo "Railway authentication failed. Verify the token in GitHub Secrets is valid and belongs to the target Railway project or workspace."
+          if ! railway up --ci --detach --yes "${SERVICE_ARGS[@]}"; then
+            echo "Railway authentication or deployment failed. Verify the token in GitHub Secrets is valid and has access to the target project or workspace."
             exit 1
           fi
-
-          railway up --ci --detach --yes "${SERVICE_ARGS[@]}"
