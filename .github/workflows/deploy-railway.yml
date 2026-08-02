@@ -28,7 +28,7 @@ jobs:
           RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BACKEND_PORTFOLIO }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BACKEND }}
           # GitHub forbids secret names that start with 'GITHUB_'. Use DEV_GITHUB_USERNAME instead.
           DEV_GITHUB_USERNAME: ${{ secrets.DEV_GITHUB_USERNAME }}
           ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
